@@ -66,7 +66,6 @@ class NumberSequence(object):
         self.error = None
         return text
 
-
     @classmethod
     def _range(cls, lower, upper, delta):
         while lower <= upper:
@@ -75,7 +74,8 @@ class NumberSequence(object):
 
     def _error(self, tag, fmt, *args):
         self.error = tag
-        raise ValueError("NumberSequence: " + (tag and tag + " ") + (fmt.format(args) if args else fmt))
+        raise ValueError("NumberSequence: " + (tag and tag + " ") +
+                         (fmt.format(args) if args else fmt))
 
     def parse(self, text):
         """This returns a tuple of numbers."""
@@ -120,7 +120,12 @@ class NumberSequence(object):
                 if upper < lower:
                     self._error("UPPER<LOWER", tag + "UPPER({}) is less than LOWER({})".format(upper, lower))
             else:
-                lower = upper = self.numtype(lowup)
+                try:
+                    lower = upper = self.numtype(lowup)
+                except ValueError:
+                    self._error("Parse Error", "invalid {} value: '{}'".format(
+                        self.numtype.__name__, lowup))
+                    
             if any(map(math.isinf, (lower, upper, step))):
                 self._error("Infinite Value", tag + "Numeric values cannot be infinite ({})".format(subseq))
             if self.lowest is not None and lower < self.lowest:

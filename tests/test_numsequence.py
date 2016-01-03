@@ -40,23 +40,29 @@ def _failed_test(parse_args, name, token, expected, direxpected=None):
     testname = 'pynumparser.NumberSequence({}).parse("{}")'.format(parse_args, token)
     if direxpected is None:
         direxpected = expected
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as exc_info:
         # Test as a stand-alone parser:
         num_parser = pynumparser.NumberSequence(*parse_args)
         directly = num_parser.parse(token)
-    assert direxpected in exc.value.message, "ArgException did not match:\n\t{}\n\t{}".format(expected, exc.value.message)
+    print("Dir.Exp: " + str(expected))
+    print("Dir.Got: " + str(exc_info.value))
+    assert direxpected in str(exc_info.value), "DirException did not match:\n\t{}\n\t{}".format(expected, str(exc_info.value))
 
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(Exception) as exc_info:
         parser = argparse.ArgumentParser(prog=('Test({})'.format(parse_args)),
                                          description="pynumrange test")
         parser.add_argument('--number', type=pynumparser.NumberSequence(*parse_args))
         parser.error = _perror
         parsed = parser.parse_args(['--number=' + token]).number
-    assert expected in exc.value.message, "ArgException did not match:\n\t{}\n\t{}".format(expected, exc.value.message)
+    print("Arg.Exp: " + str(expected))
+    print("Arg.Got: " + str(exc_info.value))
+    assert expected in str(exc_info.value), "ArgException did not match:\n\t{}\n\t{}".format(expected, str(exc_info.value))
 
     # And validate the name:
     if name is not None:
         repr_name = repr(num_parser)
+        print("Rep.Exp: " + name)
+        print("Rep.Got: " + repr_name)
         assert repr_name == name, "Representation error."
 
 
@@ -90,12 +96,10 @@ def test_throws():
     BADFLOAT = "could not convert string to float: %s"    
 
     _failed_test((bytes,), None, None, "Invalid numeric type")
-    _failed_test((), "IntSequence", 'junk',
-                 "invalid IntSequence value: 'junk'",
-                 BADINT % 'junk')
-    _failed_test((float,), "FloatSequence", 'junk',
-                 "invalid FloatSequence value: 'junk'",
-                 BADFLOAT % 'junk')
+    _failed_test((), 'IntSequence, ERROR: "Parse Error"', 'junk',
+                 'IntSequence, ERROR: "Parse Error"', "invalid int value: 'junk'")
+    _failed_test((float,), 'FloatSequence, ERROR: "Parse Error"', 'junk',
+                 'FloatSequence, ERROR: "Parse Error"', "invalid float value: 'junk'")
     _failed_test((), 'IntSequence, ERROR: "Invalid STEP"', '-123--5/zz', "Invalid STEP")
     _failed_test((), 'IntSequence, ERROR: "Invalid UPPER"', '5-zz', "Invalid UPPER")
     _failed_test((), 'IntSequence, ERROR: "Invalid LOWER"', 'zz-5', "Invalid LOWER")

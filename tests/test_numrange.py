@@ -55,7 +55,7 @@ def _failed_test(parse_args, name, token, expected, direxpected=None):
         # Test as a stand-alone parser:
         num_parser = pynumparser.Number(*parse_args)
         directly = num_parser.parse(token)
-    assert direxpected in exc.value.message, "ArgException did not match:\n\t{}\n\t{}".format(expected, exc.value.message)
+    assert direxpected in str(exc.value), "ArgException did not match:\n\t{}\n\t{}".format(expected, str(exc.value))
 
     with pytest.raises(Exception) as exc:
         parser = argparse.ArgumentParser(prog=('Test({})'.format(parse_args)),
@@ -63,9 +63,9 @@ def _failed_test(parse_args, name, token, expected, direxpected=None):
         parser.add_argument('--number', type=pynumparser.Number(*parse_args))
         parser.error = _perror
         parsed = parser.parse_args(['--number=' + token]).number
-    if expected not in exc.value.message:
+    if expected not in str(exc.value):
         raise exc.value
-    assert expected in exc.value.message, "ArgException did not match:\n\t{}\n\t{}".format(expected, exc.value.message)
+    assert expected in str(exc.value), "ArgException did not match:\n\t{}\n\t{}".format(expected, str(exc.value))
 
     # And validate the name:
     if name is not None:
