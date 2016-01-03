@@ -34,9 +34,9 @@ Subsequences can be simple numbers or number ranges with or without a *stride* v
 - A range is expressed as two (2) number values separated by a dash/hyphen (**-**). A range will
   yield multiple values (usually) **including both boundary values**. Numbers in the range differ by
   the optional *stride* value, which defaults to **1**.
-  - The lower and upper range values are separated by a single dash/hyphen,except if the upper value
-    is negative (eg: **"-5-**__-3"__).  The upper range value must be greater or equal to the lower
-    range value.
+  - The lower and upper range values are separated by a single dash/hyphen, except if the upper
+    range value is negative (eg: **"-5-**__-3"__).  The upper range value must be greater or equal
+    to the lower range value.
   - The optional *stride* value is separated from the second range value with a forward slash
     (**/**).
 - By default numbers are of **int** type, but if constructed with the parameter
@@ -121,6 +121,6 @@ Known Issues:
    omitted.  This happens very rarely, but for example a FloatSequence result from **"0-13/1.3"**
    does not include the value **13** as expected, the results are:
    *(0.0, 1.3, 2.6, 3.9000000000000004, 5.2, 6.5, 7.8, 9.1, 10.4, 11.700000000000001)*.
-2. Errors during **argparse.ArgumentParser** parsing are akwardly worded.  Improvement suggestions
+2. Errors during **argparse.ArgumentParser** parsing are awkwardly worded.  Improvement suggestions
    are welcome.
 
