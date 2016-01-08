@@ -76,24 +76,16 @@ class NumberSequence(object):
         self.error = tag
         raise ValueError("NumberSequence: " + (tag and tag + " ") +
                          (fmt.format(args) if args else fmt))
-
-    def parse(self, text):
-        """This returns a tuple of numbers."""
-        return tuple(self.xparse(text))
-
-    def xparse(self, text):
-        """This is a generator for the numbers that 'parse()' returns.
-        Use this (rather than 'parse()') in the same way you would use
-        'xrange()' in lieu of 'range()'."""
-        self.error = None
+                
+    def _subsequences(self, text):
+        results = []
         for nss, subseq in enumerate(text.split(',')):
-            step = None
             if not subseq:
                 self._error("Empty subsequence", "Subsequence #{} is empty", nss)
             tag = "Subsequence \"{}\": ".format(subseq)
             if '/' in subseq:
                 if '-' not in subseq[1:]:
-                    self._error("Missing UPPER", tag + "STEP(\"{}\") w/o UPPER", step)
+                    self._error("Missing UPPER", tag + "STEP w/o UPPER (\"{}\")", subseq)
                 lowup, step = subseq.split('/')
                 try:
                     step = self.numtype(step)
@@ -125,15 +117,51 @@ class NumberSequence(object):
                 except ValueError:
                     self._error("Parse Error", "invalid {} value: '{}'".format(
                         self.numtype.__name__, lowup))
-                    
             if any(map(math.isinf, (lower, upper, step))):
                 self._error("Infinite Value", tag + "Numeric values cannot be infinite ({})".format(subseq))
             if self.lowest is not None and lower < self.lowest:
                 self._error("LOWER too small", tag + "LOWER({}) cannot be less than ({})".format(lower, self.lowest))
             if self.highest is not None and upper > self.highest:
                 self._error("UPPER too large", tag + "UPPER({}) cannot be greater than ({})".format(upper, self.highest))
+
+            yield (tag, nss, subseq, lower, upper, step)
+
+    def xparse(self, text):
+        """This is a generator for the numbers that 'parse()' returns.
+        Use this (rather than 'parse()') in the same way you would use
+        'xrange()' in lieu of 'range()'."""
+        self.error = None
+        for nss, tag, subseq, lower, upper, step in self._subsequences(text):
+            print("[[%s]] = (%s, %s, %s)" % (subseq, lower, upper, step))
             for num in self._range(lower, upper, step):
                 yield num
+
+    def contains(self, text, number):
+        """Returns true if the given NUMBER is contained in this range."""
+        if isinstance(number, (tuple, list)):
+            return tuple(self.contains(text, num) for num in number)
+        try:
+            number = self.numtype(number)
+        except:
+            # Should this be a TypeError instead?
+            return False
+        for nss, tag, subseq, lower, upper, step in self._subsequences(text):
+            if number in (lower, upper):
+                return True
+            if lower < number and number < upper:
+                if (number - lower) % step == 0:
+                    return True
+                elif self.numtype == float:
+                    # We compare to within 10 PPM (0.001%); arbitrary but pretty good.
+                    epsilon = step / 1e5
+                    if (abs(number - lower + epsilon) % step) < 2 * epsilon:
+                        return True
+                    print("(abs(%s-%s)%%%s) == %s >= %s" % (number, lower, step, abs(number-lower)%step, epsilon))
+        return False
+
+    def parse(self, text):
+        """This returns a tuple of numbers."""
+        return tuple(self.xparse(text))
 
     def __call__(self, text):
         if self.generator:

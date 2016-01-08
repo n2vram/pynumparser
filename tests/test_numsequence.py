@@ -91,7 +91,7 @@ def test_happy():
                 (0.0, 8.0, 16.0))
 
 
-def test_throws():
+def test_sequence_throws():
     BADINT = "invalid literal for int() with base 10: '%s'"
     BADFLOAT = "could not convert string to float: %s"    
 
@@ -143,3 +143,46 @@ def _test_generator(parse_args, name, token, expected):
 def test_generator():
     _test_generator((int,None,True), 'IntSequence', '1-5', (1, 2, 3, 4, 5))
     _test_generator((float,None,True), 'FloatSequence', '20-40/5', tuple(map(float, range(20, 45, 5))))
+
+
+def _contains(args, token, has, hasnot):
+    # Test as a stand-alone parser:
+    parser = pynumparser.NumberSequence(*args)
+    for element in has:
+        contains = parser.contains(token, element)
+        message = "NumberSequence({}).contains(\"{}\", {}) should be True".format(args, token, element)
+        assert contains == True, message
+
+    expect = tuple(True for e in has)
+    result = parser.contains(token, has)
+    message = "NumberSequence({}).contains(\"{}\", {}) should all be True".format(args, token, has)
+    assert result == expect, message
+
+    for element in hasnot:
+        contains = parser.contains(token, element)
+        message = "NumberSequence({}).contains(\"{}\", {}) should be False".format(args, token, element)
+        assert not contains, message
+    expect = tuple(False for e in hasnot)
+    result = parser.contains(token, hasnot)
+    message = "NumberSequence({}).contains(\"{}\", {}) should all be False".format(args, token, hasnot)
+    assert result == expect, message
+
+
+def test_contains():
+    _contains((int,), "1,5,8", (1, 5, 8), (0, 3, 4, 7, 9))
+    _contains((int,), "10-100000", (10, 100000), (1, 9, 100001))
+    _contains((int,), "10-100000/5", (10, 15, 20, 99990, 99995, 100000, 55555), (5, 11, 99999, 55556))
+    _contains((float,), "-1e3-1e3/1e2,100-120", (-500, -100, 0, 100, 500), (-999, None, 0.1, 1001))
+
+    # Test rounding to at the 5th digit, above and below.
+    FAIL_SMALL = 0.99998999
+    OKAY_SMALL = 0.99999000
+    OKAY_LARGE = 1.00000999
+    FAIL_LARGE = 1.00001001
+    _contains((float,), "0-13.0/0.13",
+              (0.13, 2.6, 3.90, 0.13 * (5 + OKAY_SMALL), 0.13 * (5 + OKAY_LARGE)),
+              (-1.301e-6, 15.3, 0.13 * (5 + FAIL_SMALL), 0.13 * (5 + FAIL_LARGE)))
+
+
+# NOTE: We skip testing that .contains() raises the validity exceptions that .parse() raises, relying on
+# the fact that they share the same parsing engine.
