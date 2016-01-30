@@ -1,5 +1,6 @@
 #
-# Fix the bug where "pytest" does not prepend PYTHONPATH with the current directory.
+# Fix the bug where "pytest" does not prepend PYTHONPATH with the current
+# directory.
 #
 import os.path
 import sys
