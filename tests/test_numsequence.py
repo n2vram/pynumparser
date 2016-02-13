@@ -11,6 +11,12 @@ def _perror(*args, **kwds):
     raise StopIteration("PARSER FAIL({}, {})".format(args, kwds))
 
 
+def _frange(lower, upper, step=1.0):
+    while lower < upper:
+        yield lower
+        lower += step
+
+
 def _happy_test(parse_args, name, token, expected):
     testname = 'pynumparser.NumberSequence({}).parse("{}")'.format(
         parse_args, token)
@@ -18,7 +24,7 @@ def _happy_test(parse_args, name, token, expected):
     # Test as a stand-alone parser:
     num_parser = pynumparser.NumberSequence(*parse_args)
     directly = num_parser.parse(token)
-    assert directly == expected, "Direct result error"
+    assert directly == expected, "Direct result error for: " + token
 
     parser = argparse.ArgumentParser(prog=('Test({})'.format(parse_args)),
                                      description="pynumrange test")
@@ -27,7 +33,7 @@ def _happy_test(parse_args, name, token, expected):
     parser.error = _perror
     try:
         parsed = parser.parse_args(['--number=' + token]).number
-        assert parsed == expected, "ArgumentParser result error"
+        assert parsed == expected, "ArgumentParser result error for: " + token
     except StopIteration as exc:
         assert False, "{} expected: {}\n{}".format(testname, expected, exc)
 
@@ -86,6 +92,11 @@ def test_happy():
                 list(range(7, 12)) + list(range(5, 9)))
     _happy_test((), "IntSequence", '-2-2', range(-2, 3))
     _happy_test((), "IntSequence", '-4--2', range(-4, -1))
+    _happy_test((), "IntSequence", '+8-+12', range(8, 13))
+    _happy_test((), "IntSequence", '12+8', range(12, 21))
+    _happy_test((), "IntSequence", '8+22/5', range(8, 31, 5))
+
+    _happy_test((float, ), "FloatSequence", '105+10/5', (105.0, 110.0, 115.0))
     _happy_test((float, (0, 3210)), "FloatSequence (from 0 to 3210)",
                 '0-21/3.5', (0.0, 3.5, 7.0, 10.5, 14.0, 17.5, 21.0))
     _happy_test((float, (0, 3210)), "FloatSequence (from 0 to 3210)",
@@ -95,6 +106,10 @@ def test_happy():
                 (0.0, 8.0, 16.0))
     _happy_test((float, (None, 20)), "FloatSequence (not over 20)", '0-20/8',
                 (0.0, 8.0, 16.0))
+
+    # This is hideous, but actually parses correctly:
+    _happy_test((float, ), "FloatSequence", '-1.8e-1--1.3e-1/0.1e-1',
+                _frange(-1.8e-1, -1.31e-1, 0.1e-1))
 
 
 def test_sequence_throws():
@@ -107,7 +122,7 @@ def test_sequence_throws():
                  "invalid float value: 'junk'")
     _failed_test((), 'IntSequence, ERROR: "Invalid STEP"', '-123--5/zz',
                  "Invalid STEP")
-    _failed_test((), 'IntSequence, ERROR: "Invalid UPPER"', '5-zz',
+    _failed_test((), 'IntSequence, ERROR: "Invalid UPPER"', '5-3zz',
                  "Invalid UPPER")
     _failed_test((), 'IntSequence, ERROR: "Invalid LOWER"', 'zz-5',
                  "Invalid LOWER")
@@ -121,6 +136,7 @@ def test_sequence_throws():
     _failed_test((), 'IntSequence, ERROR: "STEP must be positive"', '1-8/0',
                  "STEP must be positive")
     _failed_test((), 'IntSequence, ERROR: "UPPER<LOWER"', '8-1', "UPPER<LOWER")
+    _failed_test((), 'IntSequence, ERROR: "UPPER<LOWER"', '8+-1', "UPPER<LOWER")
 
     _failed_test((float,), 'FloatSequence, ERROR: "Infinite Value"', '1e999',
                  'ERROR: "Infinite Value"', "values cannot be infinite")
@@ -138,7 +154,7 @@ def _test_generator(parse_args, name, token, expected):
     directly = num_parser.xparse(token)
     assert isinstance(directly, types.GeneratorType), "Not a Generator: " + \
         str(directly)
-    assert tuple(directly) == tuple(expected), "Direct result error"
+    assert tuple(directly) == tuple(expected), "Direct result error for: " + token
 
     parser = argparse.ArgumentParser(prog=('Test({})'.format(parse_args)),
                                      description="pynumrange test")
@@ -149,7 +165,7 @@ def _test_generator(parse_args, name, token, expected):
         parsed = parser.parse_args(['--number=' + token]).number
         assert isinstance(parsed, types.GeneratorType), "Not a Generator: " + \
             str(parsed)
-        assert tuple(parsed) == tuple(expected), "Direct result error"
+        assert tuple(parsed) == tuple(expected), "Direct result error for: " + token
     except StopIteration as exc:
         assert False, "{} expected: {}\n{}".format(num_parser, expected, exc)
 

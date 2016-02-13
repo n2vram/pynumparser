@@ -21,6 +21,7 @@ number sequences: NumberSequence and Number.
        "1,3,8"      ==> (1, 3, 8)
        "8-10,30"    ==> (8, 9, 10, 30)
        "5-30/5,100" ==> (5, 10, 15, 20, 25, 30, 100)
+       "8,10+3"     ==> (8, 10, 11, 12, 13)
 
    * Encoding Example:
        (5, 10, 15, 20, 25, 30, 100, 101, 102, 110) ==> "5-30/5,100-102,110"
@@ -59,12 +60,16 @@ Example Usage:
 """
 
 import math
+import re
 version = '1.2'
 
 description = ('A library to parse arguments of numbers and number ' +
                'sequences, usable directly or with argparse. Allows' +
                ' concise representation of contiguous or non-contiguous' +
                ' sequences. Example: 1,5-10,200-400/25')
+
+
+_SEQPATT = re.compile('^(.*[^-+e])([-+])([-+]?[.0-9][^-+]*([Ee][-+]?[0-9]+)?)$')
 
 
 class NumberSequence(object):
@@ -74,10 +79,11 @@ class NumberSequence(object):
 
        SEQUENCE :=  SUBSEQ [ ',' SEQUENCE ]
        SUBSEQ   :=  LOWER [ '-' UPPER [ '/' STRIDE ]]
+       SUBSEQ   :=  LOWER [ '+' INCREMENT [ '/' STRIDE ]]
 
     Where all terminals (LOWER, UPPER, STRIDE) must be valid numbers.
     Example:   "1,5-7,20-30/5" would return: (1, 5, 6, 7, 20, 25, 30)
-    Example:   "10-40/17,1-3"  would return: (10, 27, 34, 1, 2, 3)
+    Example:   "10-40/17,1+2"  would return: (10, 27, 34, 1, 2, 3)
 
     Instances can also efficiently test for membership in a sequence, eg:
 
@@ -126,7 +132,7 @@ class NumberSequence(object):
                             "Subsequence #{} is empty", nss)
             tag = "Subsequence \"{}\": ".format(subseq)
             if '/' in subseq:
-                if '-' not in subseq[1:]:
+                if '-' not in subseq[1:] and '+' not in subseq[1:]:
                     self._error("Missing UPPER",
                                 tag + "STEP w/o UPPER (\"{}\")", subseq)
                 lowup, step = subseq.split('/')
@@ -141,21 +147,23 @@ class NumberSequence(object):
             else:
                 lowup, step = subseq, 1
 
-            # We must handle all of: ("-5", "2", "-3-5", "-3--1", "3-21")
-            if '-' in lowup[1:]:
-                ind = lowup.index('-', 1)
+            # We handle all of: "-5", "2", "-3-5", "-3--1", "3-21",
+            # and "1e-5-1.001e-5/1e-8", "-20+10", "-2e+2+1e02"
+            seq = _SEQPATT.match(lowup)
+            if seq:
+                lower, sep, upper = seq.group(1, 2, 3)
                 try:
-                    lower = lowup[:ind]
                     lower = self.numtype(lower)
                 except ValueError:
                     self._error("Invalid LOWER", tag +
                                 "LOWER({}) is invalid".format(lower))
                 try:
-                    upper = lowup[ind + 1:]
                     upper = self.numtype(upper)
                 except ValueError:
                     self._error("Invalid UPPER", tag +
                                 "UPPER({}) is invalid".format(upper))
+                if sep == '+':
+                    upper += lower
                 if upper < lower:
                     self._error("UPPER<LOWER", tag +
                                 "UPPER({}) is less than LOWER({})".format(
