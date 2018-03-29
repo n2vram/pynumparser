@@ -63,12 +63,14 @@ Subsequences can be simple numbers or number ranges with or without a **stride**
 - If the difference between the limits is not an even mulitiple of the *stride* value, then the
   second range will *not* be included in the result.
 
-- The parser has a *contains* method, which can be used to for a number versus a text range
+- The parser has a *contains* method, which can be used to check if a number is in the range.
   *[as of version 1.1]*.
 
+- The *Number* class has a *contains* method, which can be check if a number is in the range.
+  *[as of version 1.4]*.
+
 - **NumberSequence** has a classmethod *encode* that will convert a sequence into a simplified text
-  representation.
-  *[as of version 1.2]*.
+  representation. *[as of version 1.2]*.
 
   .. code:: python
 
