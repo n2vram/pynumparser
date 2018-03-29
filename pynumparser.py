@@ -61,13 +61,12 @@ Example Usage:
 
 import math
 import re
-version = '1.2'
+version = '1.4'
 
 description = ('A library to parse arguments of numbers and number ' +
                'sequences, usable directly or with argparse. Allows' +
                ' concise representation of contiguous or non-contiguous' +
-               ' sequences. Example: 1,5-10,200-400/25')
-
+               ' sequences. Example: 1,5-10,40-50/5,200+100/25')
 
 _SEQPATT = re.compile('^(.*[^-+e])([-+])([-+]?[.0-9][^-+]*([Ee][-+]?[0-9]+)?)$')
 
@@ -204,8 +203,7 @@ class NumberSequence(object):
             return tuple(self.contains(text, num) for num in number)
         try:
             number = self.numtype(number)
-        except:
-            # Should this be a TypeError instead?
+        except (TypeError, ValueError):
             return False
         for nss, tag, subseq, lower, upper, step in self._subsequences(text):
             if number in (lower, upper):
@@ -332,19 +330,37 @@ class Number(object):
         except ValueError:
             self._error("Parse Error",
                         "invalid {} value: '{}'".format(self.typename, text))
-
-        if math.isinf(value):
-            self._error("Infinite Value",
-                        "Numeric values cannot be infinite ({})".format(text))
-        if self.lowest is not None and value < self.lowest:
-            self._error("Too Low",
-                        "Value ({}) must not be less than {}".format(
-                            value, self.lowest))
-        if self.highest is not None and value > self.highest:
-            self._error("Too High",
-                        "Value ({}) must not be higher than {}".format(
-                            value, self.highest))
+        self._isvalid(value, error=True)
         return value
+
+    def contains(self, number):
+        """Returns true if the given NUMBER is valid and within the limits."""
+        if isinstance(number, (tuple, list)):
+            return tuple(self.contains(num) for num in number)
+        # We explicitly allow testing if a float range contains an integer:
+        if self.numtype is float and isinstance(number, int):
+            number = float(number)
+        return self._isvalid(number, error=False)
+
+    def _isvalid(self, number, error):
+        # Raise the error, or just return False.
+        call = self._error if error else lambda *args: False
+        if not isinstance(number, self.numtype):
+            return call("Invalid Type",
+                        "Invalid {} value ({})".format(
+                            self.typename.lower(), number))
+        elif math.isinf(number):
+            return call("Infinite Value",
+                        "Numeric values cannot be infinite ({})".format(number))
+        elif self.lowest is not None and number < self.lowest:
+            return call("Too Low",
+                        "Value ({}) must not be less than {}".format(
+                            number, self.lowest))
+        elif self.highest is not None and number > self.highest:
+            return call("Too High",
+                        "Value ({}) must not be higher than {}".format(
+                            number, self.highest))
+        return True
 
     def __call__(self, text):
         return self.parse(text)

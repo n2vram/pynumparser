@@ -1,5 +1,3 @@
-# content of test_time.py
-
 import argparse
 import pytest
 import types
