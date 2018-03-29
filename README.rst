@@ -1,5 +1,5 @@
-pynumparser
-=============
+pynumparser 1.3
+===============
 
 Summary
 -------
@@ -222,9 +222,11 @@ Releases:
    +-------------+----------------------------------------------------------------------------+
    |     1.1     | Added the **NumberSequence.contains()** method.                            |
    +-------------+----------------------------------------------------------------------------+
-   |   1.2.0.0   | Added the **NumberSequence.encode()** method, fixed documentation on PyPi. |
+   |     1.2     | Added the **NumberSequence.encode()** method, fixed documentation on PyPi. |
    +-------------+----------------------------------------------------------------------------+
    |     1.3     | Added the **NumberSequence** format "+" to specify a *range size*.         |
+   +-------------+----------------------------------------------------------------------------+
+   |     1.4     | Added the **Number.contains()** method and Travis CI test integration.     |
    +-------------+----------------------------------------------------------------------------+
 
 

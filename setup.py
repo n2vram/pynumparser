@@ -9,7 +9,7 @@ url = 'https://github.com/n2vram/' + name
 
 setup(
     name=name,
-    version=pynumparser.version + ".0.0",
+    version=pynumparser.version,
     description=pynumparser.description,
     long_description=open('README.rst').read(),
     license='MIT',

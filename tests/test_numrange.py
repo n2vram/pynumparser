@@ -1,7 +1,5 @@
-# content of test_time.py
-
-import pytest
 import argparse
+import pytest
 
 import pynumparser
 
@@ -99,3 +97,32 @@ def test_numrange_throws():
                  '5', "Too Low")
     _failed_test((float, (None, 20)), 'Float (not over 20), ERROR: "Too High"',
                  '30', "Too High")
+
+
+def _contains(parse_args, value, expected):
+    parser = pynumparser.Number(*parse_args)
+    result = parser.contains(value)
+    assert result == expected
+
+
+def test_numrange_contains():
+    _contains((), (0, 1, 5, 9999999999999), (True, True, True, True))
+    _contains((int, (None, 100)), (-999999, 0, 1, 99, 100, 101, 999999999),
+              (True, True, True, True, True, False, False))
+    _contains((int, (10, 20)), list(range(0, 25)),
+              tuple([False] * 10 + [True] * 11 + [False] * 4))
+    _contains((), (0, 1, 5, 9999999999999), (True, True, True, True))
+    _contains((int, (None, 100)), (-999999, 0, 1, 99, 100, 101, 999999999),
+              (True, True, True, True, True, False, False))
+    _contains((int, (10, 20)), [1, 1.25, False, 'abcdef', True, None],
+              tuple([False] * 6))
+
+    _contains((float, (None, 100)), (-999999, 0, 1, 99, 100, 101, 999999999),
+              (True, True, True, True, True, False, False))
+    _contains((float, (10, 20)), list(range(0, 25)),
+              tuple([False] * 10 + [True] * 11 + [False] * 4))
+    _contains((), (0, 1, 5, 9999999999999), (True, True, True, True))
+    _contains((float, (None, 100)), (-999999, 0, 1, 99, 100, 101, 999999999),
+              (True, True, True, True, True, False, False))
+    _contains((float, (10, 20)), [1, 1.25, False, 'abcdef', True, None],
+              tuple([False] * 6))
