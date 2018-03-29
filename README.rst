@@ -1,12 +1,12 @@
-pynumparser 1.3
+pynumparser 1.4
 ===============
 
 Summary
 -------
 
 This library provides two classes for parsing simple integer or floating piont numbers and numeric
-sequences, optionally enforcing value limits. These can be used directly or as the *type*
-parameter of an argument within an *argparse.ArgumentParser*.
+sequences, optionally enforcing value limits. These can be used as explicit objects or as the
+*type* parameter of an argument within an *argparse.ArgumentParser*.
 
 - **NumberSequence** parses an input string and yields a sequence of numbers, optionally ensuring
   they are within the given limits. It will also convert a sequence of numbers into the string form
@@ -15,6 +15,12 @@ parameter of an argument within an *argparse.ArgumentParser*.
   limits.
 - Both classes take a **numtype** parameter (*int* or *float*), and a **limits** parameter which
   can be *None* or a 2-tuple; the 2-tuple imposes limits on the parsed values.
+
+.. contents:: **Index**
+   :depth: 2
+   :local:
+
+----------
 
 Installation
 ------------
@@ -49,9 +55,9 @@ Subsequences can be simple numbers or number ranges with or without a **stride**
 
   - Only monotonically increasing ranges are allowed:
 
-    - The **stride** must be positive (eg: "5-8/0" is illegal).
-
     - An **upper range** value must not be less than the lower range value (eg: "5-4" is illegal).
+
+    - The **stride** must be positive (eg: "5-8/0" and "8-1/-2" are illegal).
 
     - A **range size** must not be negative (eg: "8+-4" is illegal) *[as of version 1.3]*.
 
@@ -83,8 +89,8 @@ Subsequences can be simple numbers or number ranges with or without a **stride**
       '10-95/5'
 
 
-**Exceptions**:
-^^^^^^^^^^^^^^^
+**Exceptions**
+^^^^^^^^^^^^^^
 
 These apply to both the **NumberSequence** and **Number** classes:
 
@@ -161,8 +167,8 @@ argument and a long flag with an invalid one:
     demo.py: error: argument -F/--fnum: invalid Float (from -100 to 1000), ERROR: "Parse Error" value: '-1..5'
 
 
-Example with *argparse.ArgumentParser*:
----------------------------------------
+Example with *argparse.ArgumentParser*
+--------------------------------------
 
 .. code::
 
@@ -186,8 +192,8 @@ Example with *argparse.ArgumentParser*:
 
     print(parser.parse_args())
 
-Examples *NumberSequence* Results:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Examples *NumberSequence* Results
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With the default parameters (*numtype=int, limits=None*):
 
 - **"5"** yields a result of *(5)*.
@@ -215,8 +221,8 @@ With parameters (*numtype=float*, *limits=None*) the results are floating point 
 - **"0-1/.25"** would give a result of *(0.0, 0.25, 0.5, 0.75, 1.0)*.
 
 
-Releases:
-^^^^^^^^^
+Releases
+^^^^^^^^
    +-------------+----------------------------------------------------------------------------+
    | **Version** | **Description**                                                            |
    +-------------+----------------------------------------------------------------------------+
@@ -231,9 +237,15 @@ Releases:
    |     1.4     | Added the **Number.contains()** method and Travis CI test integration.     |
    +-------------+----------------------------------------------------------------------------+
 
+Build Status
+^^^^^^^^^^^^
 
-Known Issues:
-^^^^^^^^^^^^^
+.. image:: https://travis-ci.org/n2vram/pynumparser.svg?master
+    :alt: Build Status
+    :target: https://travis-ci.org/n2vram/pynumparser
+
+Known Issues
+^^^^^^^^^^^^
 
 - Under some circumstances, floating point representation errors cause the upper range to be
   (unexpectedly) omitted.  This happens due to the internal representation of floating point

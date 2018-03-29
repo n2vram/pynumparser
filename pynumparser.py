@@ -61,7 +61,7 @@ Example Usage:
 
 import math
 import re
-version = '1.3'
+version = '1.4'
 
 description = ('A library to parse arguments of numbers and number ' +
                'sequences, usable directly or with argparse. Allows' +
