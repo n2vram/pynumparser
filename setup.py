@@ -32,6 +32,6 @@ setup(
               'ArgumentParser', 'command-line', 'sequences'],
 
     py_modules=[name],
-    download_url=(url + '/archive/' + pynumparser.version),
+    download_url=(url + '/archive/' + pynumparser.version + '.zip'),
     platforms=['any'],
 )
